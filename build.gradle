@@ -1,7 +1,3 @@
-plugins {
-    id 'com.eriwen.gradle.js' version '2.14.1'
-}
-import com.eriwen.gradle.js.tasks.MinifyJsTask
 apply plugin:'java'
 
 ext.tempDir='temp'
@@ -17,8 +13,8 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    compile group: 'org.webjars.bower', name: "$jasmin_jarName", version: "$jasmin_jarVersion"
-    compile group: 'org.webjars', name: "$require_jarName", version: "$require_jarVersion"
+    implementation group: 'org.webjars.bower', name: "$jasmin_jarName", version: "$jasmin_jarVersion"
+    implementation group: 'org.webjars', name: "$require_jarName", version: "$require_jarVersion"
 }
 
 // 1. Transpile ZSDK to ES5 using Babel (legacy ie11 support)
@@ -72,15 +68,17 @@ task concatJs(dependsOn: [transpileZSDK, transpileModernJsLibs]) {
 }
 
 // 4. Minify concatenated JS files
-task createJSSDK(type: MinifyJsTask, dependsOn: concatJs) {
-    source = fileTree("$buildDir/concat") {
-        include "ZohoEmbededAppSDK.concat.js"
+task createJSSDK(type: Exec, dependsOn: concatJs) {
+    group = 'build'
+    description = 'Minify concatenated JS using terser'
+    inputs.file "$buildDir/concat/ZohoEmbededAppSDK.concat.js"
+    outputs.file "$buildDir/js/ZohoEmbededAppSDK.min.js"
+    doFirst {
+        file("$buildDir/js").mkdirs()
     }
-    dest = "${buildDir}/js/ZohoEmbededAppSDK.min.js"
-    closure {
-        warningLevel = 'QUIET'
-        compilerOptions.languageIn = 'ECMASCRIPT5'
-    }
+    commandLine 'npx', 'terser', "$buildDir/concat/ZohoEmbededAppSDK.concat.js",
+        '--compress', '--mangle',
+        '--output', "$buildDir/js/ZohoEmbededAppSDK.min.js"
 
     doLast {
         // cleanup
@@ -98,7 +96,7 @@ task createJSSDK(type: MinifyJsTask, dependsOn: concatJs) {
 task downloadJar(type: Copy) {
     group 'dependentJS'
     description 'Download thirdparty js dependencies'
-    from configurations.runtime
+    from configurations.runtimeClasspath
     into "$tempDir"
 }
 

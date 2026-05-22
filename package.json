@@ -25,6 +25,7 @@
   "devDependencies": {
     "@babel/cli": "7.27.2",
     "@babel/core": "7.27.4",
-    "@babel/preset-env": "7.27.2"
+    "@babel/preset-env": "7.27.2",
+    "terser": "^5.47.1"
   }
 }

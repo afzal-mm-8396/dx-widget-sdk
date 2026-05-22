@@ -1,7 +1,6 @@
 .pmd
 .gradle/
 .project
-build/
 server/
 out/
 HelpDoc.zip
